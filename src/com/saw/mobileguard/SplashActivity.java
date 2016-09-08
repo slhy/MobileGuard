@@ -27,11 +27,13 @@ import android.os.Handler;
 import android.os.Message;
 import android.os.SystemClock;
 import android.view.Menu;
+import android.view.View;
 import android.view.animation.AlphaAnimation;
 import android.view.animation.Animation;
 import android.view.animation.AnimationSet;
 import android.view.animation.RotateAnimation;
 import android.view.animation.ScaleAnimation;
+import android.widget.ProgressBar;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -58,6 +60,7 @@ public class SplashActivity extends Activity {
 	private TextView tv_versionName;//显示版本名的组件
 	private UrlBean parseJson;//url信息封装bean
 	private long startTimeMillis;//毫秒显示当前时间
+	private ProgressBar pb_download;//下载最新版本apk的进度条
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
@@ -274,12 +277,24 @@ public class SplashActivity extends Activity {
 		utils.download(parseJson.getUrl(), "/mnt/sdcard/xx.apk", new RequestCallBack<File>() {
 			
 			@Override
+			public void onLoading(long total, long current, boolean isUploading) {
+				// TODO Auto-generated method stub
+				pb_download.setVisibility(View.VISIBLE);//设置进度条的显示
+				pb_download.setMax((int)total);//设置进度条的最大值
+				pb_download.setProgress((int)current);//设置当前进度
+				super.onLoading(total, current, isUploading);
+			}
+
+
+
+			@Override
 			public void onSuccess(ResponseInfo<File> arg0) {
 				//下载成功
 				//在主线程中执行
 				Toast.makeText(getApplicationContext(), "下载新版本成功", Toast.LENGTH_LONG).show();
 				//安装apk
 				installApk();//安装apk
+				pb_download.setVisibility(View.GONE);//隐藏进度条
 			}
 			
 			
@@ -288,6 +303,7 @@ public class SplashActivity extends Activity {
 			public void onFailure(HttpException arg0, String arg1) {
 				//下载失败
 				Toast.makeText(getApplicationContext(), "下载新版本失败", Toast.LENGTH_LONG).show();
+				pb_download.setVisibility(View.GONE);//隐藏进度条
 			}
 		});
 	}
@@ -357,6 +373,7 @@ public class SplashActivity extends Activity {
 		setContentView(R.layout.activity_splash);
 		rl_root = (RelativeLayout) findViewById(R.id.rl_splash_root);
 		tv_versionName = (TextView) findViewById(R.id.tv_splash_version_name);
+		pb_download = (ProgressBar) findViewById(R.id.pb_splash_download_progress);
 	}
 
 	private void initAnimation() {
